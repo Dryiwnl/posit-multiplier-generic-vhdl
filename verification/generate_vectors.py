@@ -99,8 +99,39 @@ def output(filename,n,es,total=None,seed=20261106):
             f.write(f'{a:0{digits}X} {b:0{digits}X} {result:0{digits}X}\n')
     print(f'{filename}: {count} vectors, {path.stat().st_size} bytes',flush=True)
 
+def output64_es2(filename='posit64_es2_samples.txt', total=2000):
+    # Deterministic 64-bit edge cases and pseudo-random pairs.
+    n, es = 64, 2
+    mask = (1 << n) - 1
+    one, signbit = 1 << (n-2), 1 << (n-1)
+    seeds = sorted({v for v in
+        [0, 1, 2, 3, 4, 5, 7, 8, 15, 16, 31, 32, 63, 64, 127, 128,
+         one-2, one-1, one, one+1, one+2, signbit-2, signbit-1, signbit,
+         signbit+1, signbit+2, mask-2, mask-1, mask]
+        if 0 <= v <= mask})
+    pairs = [(a,b) for a in seeds for b in seeds]
+    seen = set(pairs)
+    state = 20261106 + 64*100 + es
+    def rand64():
+        nonlocal state
+        state = (state * 6364136223846793005 + 1442695040888963407) & mask
+        return state
+    while len(pairs) < total:
+        pair = (rand64(), rand64())
+        if pair not in seen:
+            pairs.append(pair)
+            seen.add(pair)
+    path = ROOT / filename
+    with path.open('w', encoding='ascii', newline='\\n') as f:
+        for a,b in pairs[:total]:
+            va, vb = decode(a,n,es), decode(b,n,es)
+            result = (1 << (n-1)) if va is None or vb is None else encode(va*vb,n,es)
+            f.write(f'{a:016X} {b:016X} {result:016X}\\n')
+    print(f'{filename}: {min(total,len(pairs))} vectors', flush=True)
+
 if __name__=='__main__':
     output('posit8_es0_all.txt',8,0)
     output('posit8_es1_all.txt',8,1)
     output('posit16_es2_samples.txt',16,2,20000)
     output('posit32_es2_samples.txt',32,2,20000)
+    output64_es2()
