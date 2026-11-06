@@ -1,93 +1,79 @@
 # What Is a Posit?
 
-An introduction to the Posit numerical representation, its motivation, structure, and components.
+# 1. Context
 
-## 1. Context
+---
 
-In most applications, floating-point numbers are represented using the **IEEE 754** standard. This standard is widely adopted and specifies established formats such as 16-, 32-, 64-, and 128-bit floating-point representations, as well as the handling of special values such as NaN.
-
-Given that IEEE 754 is so widely used, why develop another floating-point representation?
-
-According to **John L. Gustafson**, one of the creators of Posit arithmetic, there are two contrasting approaches to numerical computation:
+- In most applications, floating-point numbers are handled using the IEEE 754 standard: a fixed, universally standardized representation, with 16-, 32-, 64-, and 128-bit formats, NaN handling, and generally stable behavior.
+- So why develop a new floating-point representation if the most widely adopted one already handles everything? According to **John L. Gustafson**, the creator of Posit:
 
 > We contrast two esthetics for calculation involving real numbers:
 >
 > 1. Non-rigorous, but cheap, fast and “good enough” for an established set of applications.
 > 2. Rigorous and mathematical, even at the cost of greater execution time and storage.
 
-The first approach discussed by Gustafson can be related to IEEE 754 arithmetic: rounding errors are accepted within numerical computations, and the precision of a particular IEEE 754 format is fixed. These characteristics motivated research into alternative number representations.
+- The first approach mentioned by Gustafson refers to IEEE 754, where rounding errors are tolerated, there are no representations for $+\infty$ and $-\infty$, and, most importantly, precision is fixed.
 
-## 2. The Emergence of Posit
+---
 
-In **2017**, **John L. Gustafson** and **Isaac T. Yonemoto** published *[Beating Floating Point at its Own Game: Posit Arithmetic](http://www.johngustafson.net/pdfs/BeatingFloatingPoint.pdf)*, introducing the Posit number representation.
+# 2. The Emergence of Posit
 
-The development of this alternative was motivated, in part, by limitations of conventional fixed-format floating-point representations.
+---
 
-Consider an application that prioritizes precision over numerical range, or another application that prioritizes a wider numerical range over precision. Within an individual IEEE 754 format, the number of bits allocated to the exponent and significand is fixed. Posit arithmetic introduces **tapered precision**, where the available precision depends on the magnitude of the represented number.
+- In 2017, **John L. Gustafson** and **Isaac Yonemoto** published *[Beating Floating Point at its Own Game: Posit Arithmetic](http://www.johngustafson.net/pdfs/BeatingFloatingPoint.pdf)*, introducing the concept of Posits for the first time.
+- This new representation emerged in response to the limitations of IEEE 754. Suppose an application needs greater precision, or the opposite: the application focuses more on range and does not care as much about precision. With IEEE 754, it is not possible to change a format's balance between precision and range because its representation is fixed. In this context, the authors introduce **tapered precision**.
 
-**Figure placeholder — Generic Posit format.** The original Portuguese notes included an image here; the figure has not yet been provided for this documentation.
+*Image placeholder — generic Posit format (image.png in the original notes).*
 
-In a generic Posit word, only the **sign bit** has a fixed position. The sizes of the other fields vary. As the regime consumes more bits, fewer bits remain available for the fraction, and vice versa.
+- This is the generic Posit format. At first glance, we can see that only the sign bit has a fixed position. This means all the other fields are variable: increasing the number of regime bits decreases the number of fraction bits, and vice versa.
+- Another important point is hardware efficiency. IEEE 754 is quite hardware-friendly, but Posit has the potential to be more efficient because it simplifies the handling of special numbers:
 
-### Hardware considerations
+| **Case** | **IEEE 754** | **Posit** |
+| --- | --- | --- |
+| Zero | +0 and -0 | 0 |
+| NaN | $\frac{0}{0}$, $\frac{-0}{+0}$, $\frac{\infty}{\infty}$, $\frac{-\infty}{+\infty}$, $0\times\infty$, $0\times(-\infty)$, $\infty-\infty$, $(-\infty)-(-\infty)$, $\sqrt{-x}$ for $x>0$, $x\bmod 0$, $\infty\bmod x$, $\log(-x)$ for $x>0$ | NaR |
+| Infinity | $+\infty$ and $-\infty$ | Not represented |
 
-IEEE 754 is well supported by existing hardware. Posit arithmetic may also offer hardware advantages in certain implementations, partly because its special-value representation is simpler.
+---
 
-| Case | IEEE 754 | Posit |
-|---|---|---|
-| Zero | Positive zero and negative zero | One zero |
-| Invalid or undefined operations | NaN (for example, 0/0, infinity/infinity, infinity − infinity, or the real square root of a negative number) | NaR (*Not a Real*) |
-| Infinity | Positive and negative infinity | No separate infinity representation |
+# 3. Posit Structure
 
-This difference does not, by itself, guarantee that Posit arithmetic requires fewer hardware resources: the result depends on the arithmetic operation and the implementation.
+---
 
-## 3. Posit Structure
-
-The numerical value of a finite, nonzero Posit is given by
+- The structure of a Posit number is given by:
 
 $$
-x=(-1)^s\cdot\mathrm{useed}^{k}\cdot2^e\cdot(1+f),
-\qquad
-\mathrm{useed}=2^{2^{ES}}.
+x=(-1)^s\cdot\mathrm{useed}^k\cdot2^e\cdot(1+f),\qquad
+\text{where }\mathrm{useed}=2^{2^{ES}}.
 $$
 
-A binary Posit format is denoted by **Posit(N, ES)**, where **N** is the total number of bits and **ES** is the maximum exponent-field size.
+- We denote a binary Posit as **Posit($N_{\text{bits}},ES$)**. So a Posit with 32 total bits and 8 exponent bits would be written as **Posit(32,8)**.
 
-For example, a Posit with 32 total bits and a maximum exponent field of 8 bits is denoted by **Posit(32,8)**.
+## 3.1. Sign
 
-### 3.1. Sign
-
-The sign field occupies exactly **one bit**:
-
-- **0:** positive number.
-- **1:** negative number.
-
-Therefore,
+- The sign has only one bit:
+  - 0 = Positive
+  - 1 = Negative
+- Therefore:
 
 $$
 \begin{aligned}
-s=0 &\Rightarrow (-1)^0=1,\\
-s=1 &\Rightarrow (-1)^1=-1.
+s=0&\Rightarrow(-1)^0=1,\\
+s=1&\Rightarrow(-1)^1=-1.
 \end{aligned}
 $$
 
-To decode a negative Posit value, the positive-magnitude representation is obtained by taking the **two's complement** of the entire encoded word: invert all the bits and add one.
+- If the number is negative, we take its **two's complement**, which means inverting all the bits and adding 1.
+- Positive magnitude $\Rightarrow$ 01001000  
+  Invert the bits $\Rightarrow$ 10110111  
+  Add 1 $\Rightarrow$ 10111000
+- Notice that when a negative number enters the decoder, its sign bit is read by the parser and the entire word goes through two's complement so it can be interpreted as a positive magnitude. At the end of the multiplication, if necessary, we take the complement again to obtain a negative number.
 
-For example:
+## 3.2. Regime
 
-~~~text
-Positive magnitude: 01001000
-Invert the bits:   10110111
-Add 1:             10111000
-~~~
+- The regime is a sequence of zeros or ones, terminated by the opposite bit from the one that started the sequence.
 
-When a negative encoded value enters the decoder, the sign bit is identified and the full word is two's-complemented before extracting the magnitude fields. After multiplication and rounding, the resulting magnitude can be two's-complemented again if the output must be negative.
-
-### 3.2. Regime
-
-The **regime** is a sequence of consecutive zeros or ones, terminated by the opposite bit whenever enough bits remain.
-
-Examples of regime patterns:
+**Examples:**
 
 ~~~text
 0001
@@ -98,122 +84,75 @@ Examples of regime patterns:
 11111111110
 ~~~
 
-All of these are valid regime patterns. What changes between them is the regime value **k**.
-
-To determine **k**, examine the first bit and count the number **m** of consecutive identical bits:
+- All of these are valid regime values. The difference between them is the value of $k$.
+- To determine $k$ from the regime, we examine the first bit of the sequence and follow this rule:
 
 $$
 k=
 \begin{cases}
-m-1, & \text{if the regime begins with }1,\\
--m, & \text{if the regime begins with }0.
+m-1,&\text{if the regime begins with }1,\\
+-m,&\text{if the regime begins with }0.
 \end{cases}
 $$
 
+Here, $m$ is the number of consecutive identical bits at the beginning of the regime.
+
 | Regime | m | k |
-|---|---:|---:|
-| 00001 | 4 | −4 |
-| 001 | 2 | −2 |
-| 01 | 1 | −1 |
+| --- | ---: | ---: |
+| 00001 | 4 | -4 |
+| 001 | 2 | -2 |
+| 01 | 1 | -1 |
 | 10 | 1 | 0 |
 | 110 | 2 | 1 |
 | 11110 | 4 | 3 |
 
-The regime stores the number of large scale steps applied to the significand. In the complete Posit value, these steps have a size determined by **useed**.
+- $k$ represents how many binary places the point has moved, and the regime is how that information is stored in the Posit.
 
-### 3.3. Useed
+## 3.3. Useed
 
-Consider scientific notation:
+- Think about scientific notation:
 
 $$
 3500=3.5\times10^3.
 $$
 
-The factor $10^3$ determines how the significand $3.5$ is scaled to obtain the original number.
-
-The **useed** plays a related role in Posit arithmetic: it establishes the size of each large scale step, while the regime value **k** determines how many such steps are applied.
-
-$$
-\boxed{\mathrm{useed}=2^{2^{ES}}}
-$$
-
-Consequently, the regime contribution to the total scale is
+- The $10^3$ indicates the multiplication factor: in other words, what we multiply 3.5 by to bring it back to its original scale.
+- The **useed** is part of the scale by which I multiply the mantissa. Just as with decimal scientific notation, useed determines the size of the step and $k$ tells us how many steps we take.
 
 $$
-\mathrm{useed}^{k}.
+\mathrm{useed}=2^{2^{ES}}.
 $$
 
-### 3.4. Exponent
+## 3.4. Exponent
 
-The parameter **ES** defines the **maximum number of bits** available for the exponent field.
-
-For example, a **Posit(16,2)** can contain at most two exponent bits, allowing the exponent value **e** to range from **0** to **3** when both bits are available.
-
-Together with the regime contribution $\mathrm{useed}^k$, the exponent provides an additional scale factor:
+- The parameter $ES$ defines the maximum number of exponent bits. Thus, when we define a **Posit(16,2)**, the exponent can contain at most 2 bits ($e=0,1,2,$ or $3$).
+- Together with $\mathrm{useed}^k$, the exponent $e$ also defines the scale. Therefore, the Posit's final scale is:
 
 $$
-\boxed{\mathrm{scale}=\mathrm{useed}^{k}\cdot2^e}
+\mathrm{useed}^k\cdot2^e.
 $$
 
-These two terms serve different purposes:
+- We use both terms to represent the scale because they have different roles:
+  - $\mathrm{useed}^k$ $\Rightarrow$ Adjusts the scale in large steps ($2^{2^{ES}}$).
+  - $2^e$ $\Rightarrow$ Adjusts the scale in smaller steps, within $\mathrm{useed}^k$.
 
-- **$\mathrm{useed}^{k}$:** changes the scale in larger steps determined by useed.
-- **$2^e$:** introduces smaller adjustments within those large steps.
+*Image placeholders — three image.png figures from the original notes.*
 
-For **ES = 2**:
+- To better visualize how the total scale factor works, we will use the following figure:
+- In the first arc, we have the possible representations with $\mathrm{useed}=16$. We can represent values by moving in steps of a factor of 16.
+- In the second arc, we add 1 exponent bit, and intermediate values start to appear between those steps.
+- In the third arc, we add 2 exponent bits (compared with the first case). With every additional bit, we fill more of the gaps between the useed steps.
 
-$$
-\mathrm{useed}=2^{2^2}=16.
-$$
+## 3.5. Fraction
 
-The regime therefore changes the scale in powers of 16, while the exponent supplies factors of $1$, $2$, $4$, or $8$ where enough exponent bits are available.
-
-**Figure placeholders — Scale progression.** The original Portuguese notes contained three images and an additional explanatory figure in this subsection. Those images were not supplied with the text, so they have not been reproduced here.
-
-Conceptually, the progression is as follows:
-
-1. With only the useed contribution, the available scales are separated by relatively large multiplicative steps.
-2. Adding one exponent bit introduces intermediate scale values.
-3. Adding a second exponent bit introduces further intermediate values, filling more gaps between neighboring useed powers.
-
-This describes the role of exponent bits in the scale. The actual number of exponent bits in an encoded Posit may be smaller than **ES** when the regime occupies more space.
-
-### 3.5. Fraction
-
-The **fraction**, also referred to as the fractional part of the significand, contains the significant bits of the encoded number.
-
-The normalized significand has the form
+- The fraction, or mantissa, is the significant part of the value: the number by which the scale is multiplied.
+- It always follows the $(1.f)$ form:
+  - 11010.110 $\Rightarrow$ Not normalized
+  - 1.1010110 $\Rightarrow$ Normalized
+- We can use the concept of a mantissa in scientific notation to make a connection with the Posit mantissa:
 
 $$
-\boxed{1+f}
-$$
-
-and can be written in binary as **1.fraction**, with an implicit leading one.
-
-Examples:
-
-~~~text
-11010.110  -> Not normalized
-1.1010110  -> Normalized
-~~~
-
-A similar concept appears in ordinary scientific notation:
-
-$$
-3500=\underbrace{3.5}_{\text{significand}}\times10^3.
-$$
-
-In a Posit, the significand multiplies the combined scale set by the regime and exponent:
-
-$$
-\boxed{x=(-1)^s\underbrace{\mathrm{useed}^{k}2^e}_{\text{scale}}
-\underbrace{(1+f)}_{\text{significand}}}.
+3500=\underbrace{3.5}_{\text{Mantissa}}\times10^3.
 $$
 
 ---
-
-## Reference
-
-John L. Gustafson and Isaac T. Yonemoto, *Beating Floating Point at its Own Game: Posit Arithmetic* (2017). [Read the paper](http://www.johngustafson.net/pdfs/BeatingFloatingPoint.pdf).
-
-*Translated and formatted from the author's original Portuguese study notes. Figures referred to in those notes remain pending. Minor technical clarifications are included to distinguish stored fields, scale, and implementation-dependent hardware characteristics.*
