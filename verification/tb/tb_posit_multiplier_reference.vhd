@@ -40,7 +40,7 @@ begin
         variable count : natural;
     begin
         file_open(status, f80,
-            "C:/FPGA/Posit_Generic_vivado/verification/posit8_es0_all.txt", read_mode);
+            "verification/test_vectors/posit8_es0_all.txt", read_mode);
         assert status = open_ok report "Cannot open posit8_es0_all.txt" severity failure;
         count := 0;
         while not endfile(f80) loop
@@ -60,7 +60,7 @@ begin
         report "PASS Posit(8,0): " & integer'image(count) & " pairs";
 
         file_open(status, f81,
-            "C:/FPGA/Posit_Generic_vivado/verification/posit8_es1_all.txt", read_mode);
+            "verification/test_vectors/posit8_es1_all.txt", read_mode);
         assert status = open_ok report "Cannot open posit8_es1_all.txt" severity failure;
         count := 0;
         while not endfile(f81) loop
@@ -80,7 +80,7 @@ begin
         report "PASS Posit(8,1): " & integer'image(count) & " pairs";
 
         file_open(status, f16,
-            "C:/FPGA/Posit_Generic_vivado/verification/posit16_es2_samples.txt", read_mode);
+            "verification/test_vectors/posit16_es2_samples.txt", read_mode);
         assert status = open_ok report "Cannot open posit16_es2_samples.txt" severity failure;
         count := 0;
         while not endfile(f16) loop
@@ -100,7 +100,7 @@ begin
         report "PASS Posit(16,2): " & integer'image(count) & " pairs";
 
         file_open(status, f32,
-            "C:/FPGA/Posit_Generic_vivado/verification/posit32_es2_samples.txt", read_mode);
+            "verification/test_vectors/posit32_es2_samples.txt", read_mode);
         assert status = open_ok report "Cannot open posit32_es2_samples.txt" severity failure;
         count := 0;
         while not endfile(f32) loop
