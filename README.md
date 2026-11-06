@@ -181,12 +181,13 @@ The supplied table does not establish power consumption, critical-path delay or 
 
 **FPGA:** xc7a100tcsg324-1  
 **Tool:** Vivado 2025.1  
-**Status:** not yet measured.
+**Status:** Nexys A7 measurements pending. The historical Posit(8,1) row below is from a **different FPGA/tool setup** and is included for reference only; do not compare its utilization directly with the forthcoming Artix-7 rows.
 
 | Posit format | Slice LUTs | CARRY4 | DSPs | FFs | BRAM | Slices | Critical path (ns) | Fmax (MHz) | Power (mW) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | (8,0) | — | — | — | — | — | — | — | — | — |
-| (8,1) | — | — | — | — | — | — | — | — | — |
+| **(8,1) — previous device (reference only)** | **986** | **163** | **0** | **36** | **0** | **281** | — | — | — |
+| (8,1) — Nexys A7 pending | — | — | — | — | — | — | — | — | — |
 | (16,2) | — | — | — | — | — | — | — | — | — |
 | (32,2) | — | — | — | — | — | — | — | — | — |
 | (64,2) — not yet verified | — | — | — | — | — | — | — | — | — |
