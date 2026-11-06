@@ -7,7 +7,7 @@ The subjects are organized into independent folders so that new topics and modul
 ## Numerical representation
 
 - [What Is a Posit?](what_is_a_posit/README.md) — motivation, tapered precision, sign, regime, useed, exponent, and fraction.
-- **Posit Conversions** — pending translation of the original Portuguese notes.
+- [Posit Conversions](posit_conversions/README.md) — section created; English translation pending the Portuguese source text.
 
 ## Planned module documentation
 
