@@ -122,11 +122,11 @@ def output64_es2(filename='posit64_es2_samples.txt', total=2000):
             pairs.append(pair)
             seen.add(pair)
     path = ROOT / filename
-    with path.open('w', encoding='ascii', newline='\\n') as f:
+    with path.open('w', encoding='ascii', newline='\n') as f:
         for a,b in pairs[:total]:
             va, vb = decode(a,n,es), decode(b,n,es)
             result = (1 << (n-1)) if va is None or vb is None else encode(va*vb,n,es)
-            f.write(f'{a:016X} {b:016X} {result:016X}\\n')
+            f.write(f'{a:016X} {b:016X} {result:016X}\n')
     print(f'{filename}: {min(total,len(pairs))} vectors', flush=True)
 
 if __name__=='__main__':
