@@ -99,8 +99,6 @@ The diagram below is the **Posit multiplier architecture image provided for this
 
 ![Posit multiplier architecture](docs/images/posit_architecture.png)
 
-*Image pending upload: docs/images/posit_architecture.png. The figure illustrates the processing stages; exact bus widths and internal boundaries may differ from this VHDL implementation.*
-
 The synthesizable code is organized as follows:
 
 | VHDL module | Responsibility |
