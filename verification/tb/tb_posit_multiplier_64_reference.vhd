@@ -26,8 +26,13 @@ begin
     begin
         file_open(status, vectors,
             "verification/test_vectors/posit64_es2_samples.txt", read_mode);
+        if status /= open_ok then
+            file_open(status, vectors,
+                "C:/FPGA/Posit_Generic_vivado/verification/posit64_es2_samples.txt",
+                read_mode);
+        end if;
         assert status = open_ok
-            report "Cannot open posit64_es2_samples.txt: check simulator working directory"
+            report "Cannot open posit64_es2_samples.txt: save it in C:/FPGA/Posit_Generic_vivado/verification"
             severity failure;
 
         while not endfile(vectors) loop
