@@ -1,0 +1,19 @@
+# Vivado local projects and generated output
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.jou
+*.log
+*.str
+*.backup.jou
+*.backup.log
+*.wdb
+*.vcd
+*.xpr
+*.xpr.zip
+# Python
+__pycache__/
+*.pyc
