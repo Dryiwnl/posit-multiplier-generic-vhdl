@@ -9,6 +9,10 @@ A **parameterized, combinational Posit multiplier** developed in VHDL-2008. The 
 
 The implementation is parameterized by total bit width **N** and exponent size **ES**, including ES = 0. Functional verification is complete for the configurations shown below; results for the target Artix-7 are pending.
 
+## Documentation
+
+[**English technical documentation**](documentation/README.md) — dedicated folders for numerical representation, conversion methods, and future VHDL module notes.
+
 ## Understanding Posit arithmetic
 
 A finite, nonzero Posit contains four logical fields:
