@@ -169,21 +169,6 @@ python verification/generate_vectors.py
 
 ## FPGA synthesis and hardware resources
 
-### Posit(8,1) — historical resource results
-
-The following values come from the **earlier Posit(8,1) synthesis table supplied for this project**. They have **not** been measured on the requested Artix-7 device with Vivado 2025.1, so they must not be presented as Nexys A7 benchmark results.
-
-| Resource | Used |
-|---|---:|
-| **Slice LUTs** | **986** |
-| **CARRY4** | **163** |
-| **DSP blocks** | **0** |
-| **Flip-flops** | **36** |
-| **Block RAM** | **0** |
-| **Slices** | **281** |
-
-The supplied table does not establish power consumption, critical-path delay or Fmax. Those values are deliberately left unreported here.
-
 ### Measured FPGA utilization — Nexys A7-100T
 
 **FPGA:** Artix-7 `xc7a100tcsg324-1` (speed grade -1)  
@@ -198,7 +183,7 @@ The supplied table does not establish power consumption, critical-path delay or 
 | (32,2) | 8,188 | 1,752 | 96 | 4 | 0 |
 | (64,2) | 20,076 | 3,669 | 196 | 16 | 0 |
 
-These are the previously collected synthesis utilization results; they are not to be confused with the historical 986-LUT Posit(8,1) result above, which came from a different setup. Resources for each configuration should be compared within the same flow.
+These utilization results were collected using the same FPGA and synthesis flow for all listed Posit configurations.
 
 ### Static timing analysis (STA)
 
