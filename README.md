@@ -4,10 +4,10 @@ A **parameterized, combinational Posit multiplier** developed in VHDL-2008. The 
 
 **Author:** Matheus Viganó Schirrmann  
 **Research group:** ProtoFPGA — Universidade Federal de Santa Catarina (UFSC)  
-**Planned FPGA:** Digilent Nexys A7-100T, Artix-7 (xc7a100tcsg324-1)  
-**Planned synthesis tool:** Vivado 2025.1
+**Target FPGA:** Digilent Nexys A7-100T, Artix-7 (xc7a100tcsg324-1)  
+**Synthesis and implementation tool:** Vivado 2026.1
 
-The implementation is parameterized by total bit width **N** and exponent size **ES**, including ES = 0. Functional verification is complete for the configurations shown below; results for the target Artix-7 are pending.
+The implementation is parameterized by total bit width **N** and exponent size **ES**, including ES = 0. Functional verification and Artix-7 synthesis/implementation results are available for the five configurations documented below.
 
 ## Documentation
 
@@ -140,9 +140,10 @@ The complete multiplier was compared against independently generated Posit resul
 | Posit(8,1) | 65,536 | All possible operand pairs | PASS |
 | Posit(16,2) | 20,000 | Directed/random sampling | PASS |
 | Posit(32,2) | 20,000 | Directed/random sampling | PASS |
-| **Total** | **171,072** | | **PASS** |
+| Posit(64,2) | 20,000 | Directed/random sampling | PASS |
+| **Total** | **191,072** | | **PASS** |
 
-These results validate the tested configurations, **not arbitrary widths**. In particular, Posit(64,ES) has not yet been validated.
+These results validate the tested configurations, **not arbitrary widths**. The 8-bit configurations were tested exhaustively; 16-, 32- and 64-bit configurations used directed/random samples.
 
 ### Vivado simulation waveform — to be added
 
@@ -181,40 +182,76 @@ The following values come from the **earlier Posit(8,1) synthesis table supplied
 
 The supplied table does not establish power consumption, critical-path delay or Fmax. Those values are deliberately left unreported here.
 
-### Future synthesis results — Nexys A7-100T
+### Measured FPGA utilization — Nexys A7-100T
 
-**FPGA:** xc7a100tcsg324-1  
-**Tool:** Vivado 2025.1  
-**Status:** Nexys A7 measurements pending. The historical Posit(8,1) row below is from a **different FPGA/tool setup** and is included for reference only; do not compare its utilization directly with the forthcoming Artix-7 rows.
+**FPGA:** Artix-7 `xc7a100tcsg324-1` (speed grade -1)  
+**Tool:** Vivado 2026.1  
+**Measurement:** synthesis of the same generic multiplier with a consistent registered I/O wrapper (`posit_mul_synth_wrapper`).
 
-| Posit format | Slice LUTs | CARRY4 | DSPs | FFs | BRAM | Slices | Critical path (ns) | Fmax (MHz) | Power (mW) |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| (8,0) | — | — | — | — | — | — | — | — | — |
-| **(8,1) — previous device (reference only)** | **986** | **163** | **0** | **36** | **0** | **281** | — | — | — |
-| (8,1) — Nexys A7 pending | — | — | — | — | — | — | — | — | — |
-| (16,2) | — | — | — | — | — | — | — | — | — |
-| (32,2) | — | — | — | — | — | — | — | — | — |
-| (64,2) — not yet verified | — | — | — | — | — | — | — | — | — |
+| Posit (N,ES) | LUTs | CARRY4 | FFs | DSP48E1 | BRAM |
+|---|---:|---:|---:|---:|---:|
+| (8,0) | 687 | 139 | 24 | 0 | 0 |
+| (8,1) | 707 | 132 | 24 | 0 | 0 |
+| (16,2) | 3,640 | 792 | 48 | 1 | 0 |
+| (32,2) | 8,188 | 1,752 | 96 | 4 | 0 |
+| (64,2) | 20,076 | 3,669 | 196 | 16 | 0 |
 
-For a timing-constrained implementation, a simple approximation using the measured critical-path delay is
+These are the previously collected synthesis utilization results; they are not to be confused with the historical 986-LUT Posit(8,1) result above, which came from a different setup. Resources for each configuration should be compared within the same flow.
 
-$$F_{\max}\,(\mathrm{MHz})\approx\frac{1000}{T_{\mathrm{critical}}\,(\mathrm{ns})}.$$
+### Static timing analysis (STA)
 
-**Measurement note:** the current top is purely combinational. A meaningful frequency comparison needs a consistent I/O timing model or registered measurement wrapper. Power estimates also depend on switching activity, constraints and implementation conditions. Record the methodology together with each result.
+**Tool/device:** Vivado 2026.1 / Artix-7 `xc7a100tcsg324-1`.  
+**Test wrapper:** `posit_mul_synth_wrapper`, with registered input operands and registered output surrounding the combinational DUT.  
+**Clock constraint:** `create_clock -name clk -period 10.000 [get_ports clk]` (100 MHz target).  
+**Measurements:** `report_timing_summary` at *Synthesized* and *Routed* design states.
+
+| Posit (N,ES) | Synth WNS (ns) | Synth data-path delay (ns) | Synth estimated Fmax (MHz) | Routed WNS (ns) | Routed data-path delay (ns) | Routed estimated Fmax (MHz) |
+|---|---:|---:|---:|---:|---:|---:|
+| (8,0) | -10.780 | 20.644 | 48.12 | -8.723 | 18.666 | **53.41** |
+| (8,1) | -9.681 | 19.545 | 50.81 | -8.211 | 18.173 | **54.91** |
+| (16,2) | -18.602 | 28.466 | 34.96 | -20.192 | 30.110 | **33.12** |
+| (32,2) | -26.348 | 36.212 | 27.51 | -30.023 | 39.735 | **24.99** |
+| (64,2) | -35.804 | 45.668 | 21.83 | -42.722 | 52.413 | **18.97** |
+
+The estimated maximum clock frequency is derived from setup slack **at the 10 ns clock constraint**:
+
+$$
+T_{\min,\mathrm{est}}\approx T_{\mathrm{constraint}}-WNS
+$$
+
+$$
+F_{\max,\mathrm{est}}\;(\mathrm{MHz})\approx\frac{1000}{T_{\min,\mathrm{est}}\;(\mathrm{ns})}
+$$
+
+**Important:** the listed *data-path delay* is **not** identical to the minimum estimated clock period (the latter also reflects setup, clock skew and uncertainty). These are **STA-derived estimates**, not measured operating frequencies on a physical board. **All five implementations violated the 100 MHz setup constraint**. Post-synthesis net delays are estimates; post-route delays reflect implemented placement and routing.
+
+The constraint set does not specify external `set_input_delay` or `set_output_delay`. Thus, the frequency estimates characterize **internal register-to-register paths of the measurement wrapper**, not a fully constrained external interface. No power or physical-board frequency measurements are claimed here.
+
+### Detailed post-route critical paths
+
+| Posit (N,ES) | Launch register | Capture register | Logic delay (ns) | Route delay (ns) | Logic levels |
+|---|---|---|---:|---:|---:|
+| (8,0) | `b_reg_reg[0]` | `y_reg_reg[7]` | 5.981 | 12.685 | 26 |
+| (8,1) | `a_reg_reg[1]` | `y_reg_reg[4]` | 5.613 | 12.560 | 25 |
+| (16,2) | `a_reg_reg[0]` | `y_reg_reg[15]` | 14.105 | 16.005 | 40 |
+| (32,2) | `b_reg_reg[0]` | `y_reg_reg[31]` | 18.703 | 21.032 | 62 |
+| (64,2) | `a_reg_reg[3]` | `y_reg_reg[54]` | 24.551 | 27.862 | 94 |
+
+These results reflect the **complete combinational multiplier** between wrapper registers (including decode, significand multiplication, scale processing, packing and rounding), rather than an isolated arithmetic core.
 
 ### Vivado hardware schematic — to be added
 
-The actual **post-synthesis technology schematic** generated in Vivado 2025.1 will be shown here when available.
+The actual **post-synthesis technology schematic** generated in Vivado 2026.1 will be shown here when available.
 
 <!-- Future image: ![Vivado post-synthesis schematic](docs/images/vivado_post_synthesis_schematic.png) -->
 
 ## Status and next steps
 
 - **Complete:** seven generic VHDL modules and module-level tests.
-- **Complete:** 171,072 reference comparisons in XSim 2026.1.
-- **Pending:** synthesis/implementation on Nexys A7-100T in Vivado 2025.1.
+- **Complete:** 191,072 reference comparisons in XSim 2026.1 across five Posit configurations.
+- **Complete:** FPGA synthesis utilization and post-synthesis/post-route STA for (8,0), (8,1), (16,2), (32,2) and (64,2) on Nexys A7-100T with Vivado 2026.1.
 - **Pending:** waveform screenshot and synthesized hardware schematic.
-- **Pending:** LUT, carry, DSP, FF, timing, and power measurements across further N/ES combinations.
+- **Pending:** power characterization and physical-board validation; 100 MHz was not met by any tested configuration.
 
 ## References and attribution
 
