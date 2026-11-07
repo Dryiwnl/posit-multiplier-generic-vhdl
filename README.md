@@ -145,11 +145,13 @@ The complete multiplier was compared against independently generated Posit resul
 
 These results validate the tested configurations, **not arbitrary widths**. The 8-bit configurations were tested exhaustively; 16-, 32- and 64-bit configurations used directed/random samples.
 
-### Vivado simulation waveform — to be added
+### Vivado simulation waveform — Posit(8,1)
 
-A waveform screenshot will be inserted here after capture in Vivado.
+Behavioral simulation of the combinational top-level, using five example operations. The waveforms show **Posit bit-pattern encodings in hexadecimal**, not ordinary decimal values: `0x40 × 0x40 → 0x40` (1 × 1 = 1), `0x50 × 0x50 → 0x60` (2 × 2 = 4), `0x40 × 0x50 → 0x50` (1 × 2 = 2), `0x00 × 0x50 → 0x00` (0 × 2 = 0), and `0xC0 × 0x50 → 0xB0` (-1 × 2 = -2). Each example occupies 20 ns in the testbench.
 
-<!-- Future image: ![Vivado waveform](docs/images/vivado_waveform.png) -->
+![Vivado behavioral waveform of Posit(8,1) multiplication](docs/images/posit_waveform_8_1.png)
+
+*Screenshot captured from Vivado XSim 2026.1. The image preserves the captured simulation view, including the expanded result bus and the longer time scale.*
 
 ### Reproducing the tests
 
